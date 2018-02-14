@@ -11,8 +11,10 @@
 
 #include <app/node.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <vector>
 
 class Graph;
 typedef std::shared_ptr<Graph> GraphRef;
@@ -45,9 +47,8 @@ class Graph {
 		 *
 		 */
         static GraphRef createInstance() {
-
+            Log::info("Graph created");
             return std::make_shared<Graph>();
-
         }
 
     public:
@@ -60,10 +61,22 @@ class Graph {
 		 *
 		 */
         NodeRef addNode(const std::string& id) {
+            Log::debugf("Trying to add node id: %d", id);
+            // check if we already have a node with this id.
+            auto foundNode = std::find_if(m_nodeMap.begin(), m_nodeMap.end(), [&id](const NodeRef& node) {
+                return node->getId() == id;
+            });
 
-			// @TODO: Implement
-			return nullptr;
-
+            // if we already have node with this id return null else create a new node
+            if (foundNode != m_nodeMap.end()) {
+                Log::errorf("Node with id: %d already exists", id);
+                return nullptr;
+            } else {
+                auto newNode = Node::createInstance(id);
+                m_nodeMap.push_back(newNode);
+                Log::debugf("new node created succesfully, id: %d", id);
+                return newNode;
+            }
         }
 
 		/**
@@ -75,9 +88,14 @@ class Graph {
 		 *
 		 */
         void addEdge(NodeRef node1, NodeRef node2) {
+            if (!node1 || !node2) {
+                Log::error("cannot add edge ebcause node is invalid");
+                return;
+            }
 
-			// @TODO: Implement
-
+            Log::debug("Successfully added edge");
+            node1->connect(node2);
+            node2->connect(node1);
         }
 
 		/**
@@ -90,10 +108,7 @@ class Graph {
 		 *
 		 */
 		size_t size() const {
-
-			// @TODO: Implement
-			return 0;
-
+            return m_nodeMap.size();
         }
 
 		/**
@@ -102,9 +117,7 @@ class Graph {
 		 *
 		 */
 		void clear() {
-
-			// @TODO: Implement
-
+            m_nodeMap.clear();
 		}
 
 		/**
@@ -115,10 +128,7 @@ class Graph {
 		 *
 		 */
 		bool empty() const {
-
-			// @TODO: Implement
-			return true;
-
+            return m_nodeMap.empty();
 		}
 
 		/**
@@ -131,10 +141,12 @@ class Graph {
 		 *
 		 */
 		NodeRef getNode(size_t index) const {
-
-			// @TODO: Implement
-			return nullptr;
-
+            if (index >= m_nodeMap.size()) {
+                Log::warn("Index out of bounds for node.");
+                return nullptr;
+            } else {
+                return m_nodeMap[index];
+            }
 		}
 
 		/**
@@ -146,10 +158,15 @@ class Graph {
 		 *
 		 */
 		NodeRef getFirst() const {
-
-			// @TODO: Implement
-			return nullptr;
-
+            if (m_nodeMap.empty()) {
+                Log::error("Graph is empty");
+                return nullptr;
+            } else {
+                return m_nodeMap[0];
+            }
 		}
+
+private:
+        std::vector<NodeRef> m_nodeMap;
 
 };

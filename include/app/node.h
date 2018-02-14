@@ -15,6 +15,7 @@
 
 class Node;
 typedef std::shared_ptr<Node> NodeRef;
+typedef std::weak_ptr<Node> NodeWRef;
 
 /**
  *
@@ -87,7 +88,7 @@ class Node {
 		 * @return Returns the connections of the node to other nodes
 		 *
 		 */
-        const std::vector<NodeRef>& getConnections() const {
+        const std::vector<NodeWRef>& getConnections() const {
             return m_connections;
         }
 
@@ -105,7 +106,7 @@ class Node {
 		}
 
     private:
-        std::string             m_id{""};
-        std::vector<NodeRef>    m_connections;
+        std::string                m_id{""};
+        std::vector<NodeWRef>      m_connections;
 
 };
