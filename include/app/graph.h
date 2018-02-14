@@ -46,8 +46,7 @@ class Graph {
 		 */
         static GraphRef createInstance() {
 
-			// @TODO: Implement
-			return nullptr;
+            return std::make_shared<Graph>();
 
         }
 
