@@ -8,7 +8,12 @@
 
 #include <app/graph.h>
 
+#include <auxiliary/logger.h>
+
+#include <queue>
 #include <string>
+#include <vector>
+#include <iostream>
 
 /**
  * 
@@ -32,53 +37,53 @@ class BreadthFirstSearch {
          * 
          */
         NodeRef find(GraphRef graph, const std::string& id) {
+
+            NodeRef result{nullptr};
+
             if (!graph) {
                 Log::error("Graph invalid...skipping search");
-                return nullptr;
+                return result;
             }
 
-            std::cout << "id:" << id << std::endl;
-
-            // The vector holds our visited nodes
-            //std::vector<NodeRef> visitedNodes;
-            //visitedNodes.reserve(graph->size());
-
             std::queue<NodeRef> toProcess;
+            std::vector<NodeRef> visitedNodes;
+            visitedNodes.reserve(grap->size());
 
             auto rootNode = graph->getFirst();
-            //visitedNodes.push_back(rootNode);
+            rootNode->markVisited();
+            visitedNodes.push_back(rootNode);
             toProcess.push(rootNode);
 
             while(!toProcess.empty()) {
 
                 auto node = toProcess.front();
                 toProcess.pop();
-                //Log::infof("now processing id: %d", node->getId());
 
                 if (node->getId() == id) {
-                    std::cout << "found id:" << id << std::endl;
-                    return node;
+                    result = node;
+                    break;
                 }
 
                 auto connections = node->getConnections();
                 for(auto itr = connections.begin(); itr != connections.end(); ++itr) {
                     if (auto lockedNode = (*itr).lock()) {
-                        /*auto visitedItr = std::find(visitedNodes.begin(), visitedNodes.end(), lockedNode);
                         // skip the node if its already visited else queue it up
-                        if (visitedItr == visitedNodes.end()) {
-                            visitedNodes.push_back(lockedNode);
+                        if (!lockedNode->visited()) {
+                            lockedNode->markedVisited();
+                            visitedNodes.push_back(rootNode);
                             toProcess.push(lockedNode);
-                        }*/
-                        toProcess.push(lockedNode);
+                        }
                     }
                 }
 
             }
 
-            std::cout << "not found id:" << id << std::endl;
+            // set all nodes we visited to unvisited
+            for (size_t i = 0; i < graph->size(); ++i) {
+                graph->getNode(i)->markVisited(false);
+            }
 
-
-			return nullptr;
+            return result;
 
         }
 

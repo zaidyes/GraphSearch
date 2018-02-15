@@ -105,8 +105,17 @@ class Node {
             return node->getId() == m_id;
 		}
 
+        void markVisited(const bool visited = true) {
+            m_visited = visited;
+        }
+
+        const bool visited() const {
+            return m_visited;
+        }
+
     private:
         std::string                m_id{""};
         std::vector<NodeWRef>      m_connections;
+        bool                       m_visited{false};
 
 };

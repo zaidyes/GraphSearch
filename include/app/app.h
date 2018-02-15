@@ -47,7 +47,7 @@ class Application {
 
 			auto bfs = std::make_unique<BreadthFirstSearch>();
 			auto graph = createGraph(NUM_DATASET_LEVELS, NUM_DATASET_NODES);
-			bool status = performSearch(bfs, graph);
+            bool status = performSearch(bfs, graph);
 		
 			return (status ? 1 : -1);
 		}
