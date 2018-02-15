@@ -61,7 +61,12 @@ class Graph {
 		 *
 		 */
         NodeRef addNode(const std::string& id) {
-            Log::debugf("Trying to add node id: %d", id);
+            auto newNode = Node::createInstance(id);
+            m_nodeMap.push_back(newNode);
+            return newNode;
+
+
+            /* ////TO ENABLE DUPLICATE ID CHECK USE THIS CODE///
             // check if we already have a node with this id.
             auto foundNode = std::find_if(m_nodeMap.begin(), m_nodeMap.end(), [&id](const NodeRef& node) {
                 return node->getId() == id;
@@ -77,6 +82,7 @@ class Graph {
                 Log::debugf("new node created succesfully, id: %d", id);
                 return newNode;
             }
+            */
         }
 
 		/**
