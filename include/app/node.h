@@ -105,10 +105,23 @@ class Node {
             return node->getId() == m_id;
 		}
 
+        /**
+         *
+         * Set if the node was visited by a traverser
+         *
+         * @param visited flag to set visited or not
+         *
+         */
         void markVisited(const bool visited = true) {
             m_visited = visited;
         }
 
+        /**
+         * Checks if the node was visited by a traverser
+         *
+         * @return true if it was visited false otherwise
+         *
+         */
         const bool visited() const {
             return m_visited;
         }

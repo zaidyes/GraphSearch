@@ -11,7 +11,6 @@
 
 #include <app/node.h>
 
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -64,24 +63,6 @@ class Graph {
             auto newNode = Node::createInstance(id);
             m_nodeMap.push_back(newNode);
             return newNode;
-
-            /* ////TO ENABLE DUPLICATE ID CHECK USE THIS CODE///
-            // check if we already have a node with this id.
-            auto foundNode = std::find_if(m_nodeMap.begin(), m_nodeMap.end(), [&id](const NodeRef& node) {
-                return node->getId() == id;
-            });
-
-            // if we already have node with this id return null else create a new node
-            if (foundNode != m_nodeMap.end()) {
-                Log::errorf("Node with id: %d already exists", id);
-                return nullptr;
-            } else {
-                auto newNode = Node::createInstance(id);
-                m_nodeMap.push_back(newNode);
-                Log::debugf("new node created succesfully, id: %d", id);
-                return newNode;
-            }
-            */
         }
 
 		/**
@@ -94,11 +75,10 @@ class Graph {
 		 */
         void addEdge(NodeRef node1, NodeRef node2) {
             if (!node1 || !node2) {
-                Log::error("cannot add edge ebcause node is invalid");
+                Log::error("cannot add edge because node is invalid");
                 return;
             }
 
-            Log::debug("Successfully added edge");
             node1->connect(node2);
             node2->connect(node1);
         }

@@ -49,42 +49,45 @@ class BreadthFirstSearch {
             std::vector<NodeRef> visitedNodes;
             visitedNodes.reserve(graph->size());
 
+            // Get root node and push it to our process queue
             auto rootNode = graph->getFirst();
-            rootNode->markVisited();
-            visitedNodes.push_back(rootNode);
             toProcess.push(rootNode);
 
-            while(!toProcess.empty()) {
+            // mark the node visited we donot want to queue it again
+            // remember the node to un-mark it in the end
+            rootNode->markVisited();
+            visitedNodes.push_back(std::move(rootNode));
 
+            while(!toProcess.empty()) {
                 auto node = toProcess.front();
                 toProcess.pop();
 
+                // If we found our result no need to do anything else...break
                 if (node->getId() == id) {
                     result = node;
                     break;
                 }
 
+                // check that the node's connections have been visited otherwise enqueue them
                 auto connections = node->getConnections();
-                for(auto itr = connections.begin(); itr != connections.end(); ++itr) {
-                    if (auto lockedNode = (*itr).lock()) {
+                for(auto weakNode : connections) {
+                    if (auto lockedNode = weakNode.lock()) {
                         // skip the node if its already visited else queue it up
                         if (!lockedNode->visited()) {
                             lockedNode->markVisited();
-                            visitedNodes.push_back(lockedNode);
                             toProcess.push(lockedNode);
+                            visitedNodes.push_back(std::move(lockedNode));
                         }
                     }
                 }
+            }          
 
-            }
-
-            // set all nodes we visited to unvisited
+            // set all nodes we visited previously to unvisited
             for (auto node : visitedNodes) {
                 node->markVisited(false);
             }
 
             return result;
-
         }
 
 };
