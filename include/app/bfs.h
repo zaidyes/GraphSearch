@@ -91,11 +91,6 @@ public:
         return nullptr;
     }
 
-    void startThreads() {
-        //std::cout << "Starting thread handling" << std::endl;
-
-    }
-
 public:
 
     void setSearchId(const std::string &id) {
@@ -128,12 +123,12 @@ public:
         m_stop = false;
 
         // start atleast one thread to perform search
-        m_futures.emplace_back(std::async(std::launch::async, findT, std::ref(m_processQueue), std::ref(m_searchId), std::ref(m_visitedNodes), m_totalNodes, std::ref(m_checked),  std::ref(m_stop)));
+        m_futures.emplace_back(std::async(findT, std::ref(m_processQueue), std::ref(m_searchId), std::ref(m_visitedNodes), m_totalNodes, std::ref(m_checked),  std::ref(m_stop)));
 
         // start more if required and when it is possible
         while (m_futures.size() < m_maxThreadCount) {
             //std::cout << "Starting new thread" << std::endl;
-            m_futures.emplace_back(std::async(std::launch::deferred, findT, std::ref(m_processQueue), std::ref(m_searchId), std::ref(m_visitedNodes), m_totalNodes, std::ref(m_checked), std::ref(m_stop)));
+            m_futures.emplace_back(std::async(findT, std::ref(m_processQueue), std::ref(m_searchId), std::ref(m_visitedNodes), m_totalNodes, std::ref(m_checked), std::ref(m_stop)));
         }
 
         return true;
@@ -229,49 +224,11 @@ class BreadthFirstSearch {
             searcher.setRootNode(rootNode);
             searcher.setTotalNodeCount(graph->size());
 
-            searcher.startSTSearch();
-            //searcher.waitForResult();
+            searcher.startMTSearch();
+            searcher.waitForResult();
             searcher.unmarkVisited();
 
             return searcher.getResult();;
-        }
-
-        NodeRef find2(GraphRef graph, const std::string& id) {
-            if (!graph || graph->empty()) {
-                Log::error("Graph empty...skipping search");
-                return nullptr;
-            }
-
-            auto rootNode = graph->getFirst();
-            if (rootNode->getId() == id) return rootNode;
-
-            SafeQueue<NodeRef> toProcess;
-            SafeQueue<NodeRef> visitedNodes;
-
-            rootNode->markVisited();
-            toProcess.queue(rootNode);
-            visitedNodes.queue(rootNode);
-
-            NodeRef result;
-            std::atomic_bool stop(false);
-            std::atomic_int checked{0};
-            result = ThreadedBFS::findT(toProcess, id, visitedNodes, graph->size(), checked, stop);
-            while(!visitedNodes.empty()) {
-                auto node = visitedNodes.deque();
-                if (node)
-                    node->markVisited(false);
-            }
-
-            /*ThreadedBFS searcher;
-            searcher.setSearchId(id);
-            searcher.setMaxThreadCount(20);
-            searcher.setRootNode(rootNode);
-
-            searcher.startMTSearch();
-
-            auto result = searcher.waitForResult();
-            searcher.unmarkVisited();*/
-            return result;
         }
 
 };
