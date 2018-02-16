@@ -67,12 +67,10 @@ class BreadthFirstSearch {
                 auto connections = node->getConnections();
                 for(auto itr = connections.begin(); itr != connections.end(); ++itr) {
                     if (auto lockedNode = (*itr).lock()) {
-                        toProcess.push(lockedNode);
-
                         // skip the node if its already visited else queue it up
                         if (!lockedNode->visited()) {
                             lockedNode->markVisited();
-                            visitedNodes.push_back(rootNode);
+                            visitedNodes.push_back(lockedNode);
                             toProcess.push(lockedNode);
                         }
                     }
