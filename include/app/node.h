@@ -9,6 +9,7 @@
 #include <auxiliary/logger.h>
 #include <auxiliary/test.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <vector>
@@ -105,8 +106,17 @@ class Node {
             return node->getId() == m_id;
 		}
 
+        const bool visited() {
+            return m_visited.load();
+        }
+
+        void markVisited(const bool visited = true) {
+            m_visited.store(visited);
+        }
+
     private:
         std::string                m_id{""};
         std::vector<NodeWRef>      m_connections;
+        std::atomic_bool           m_visited{false};
 
 };

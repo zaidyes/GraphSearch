@@ -6,6 +6,8 @@ project (BreadthFirstSearch)
 
 set (CMAKE_CXX_STANDARD 14)
 
+find_package (Threads)
+
 include_directories(./include)
 
 file (GLOB HEADER_FILES
@@ -27,6 +29,8 @@ add_executable (${PROJECT_NAME}
 	${HEADER_FILES}
 	${AUXILIARY_FILES}
 )
+
+target_link_libraries (${PROJECT_NAME}  ${CMAKE_THREAD_LIBS_INIT})
 
 source_group(src FILES ${SOURCE_FILES})
 source_group(include FILES ${HEADER_FILES})
