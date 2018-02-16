@@ -328,3 +328,31 @@ IMPLEMENT_TEST(cyclicSearchTest) {
     auto result = bfs->find(graph, "DOES_NOT_EXIST");
     testAssert(nullptr == result);
 }
+
+IMPLEMENT_TEST(EdgeLessGraphSearchTest) {
+
+    // create BFS object
+    auto bfs = std::make_unique<BreadthFirstSearch>();
+    testAssert(nullptr != bfs);
+
+    // create graph
+    auto graph = Graph::createInstance();
+    testAssert(nullptr != graph);
+
+    // add nodes
+    auto a = graph->addNode("A");
+    auto b = graph->addNode("B");
+    auto c = graph->addNode("C");
+
+    // check if root node is found
+    auto result = bfs->find(graph, "A");
+    testAssert(nullptr != result);
+
+    // check if other node is found i.e no connections to root
+    result = bfs->find(graph, "B");
+    testAssert(nullptr == result);
+
+    // check if other node is found i.e no connections to root
+    result = bfs->find(graph, "C");
+    testAssert(nullptr == result);
+}
