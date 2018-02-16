@@ -107,28 +107,29 @@ class Node {
 
         /**
          *
-         * Set if the node was visited by a traverser
+         * Sets the Index of the node with respect to its creation
          *
-         * @param visited flag to set visited or not
+         * @param idx the index to set to the node
          *
          */
-        void markVisited(const bool visited = true) {
-            m_visited = visited;
+        void setIndex(const size_t idx) {
+            m_index = idx;
         }
 
         /**
-         * Checks if the node was visited by a traverser
          *
-         * @return true if it was visited false otherwise
+         * The index of the node. This is the order of its creation
          *
+         * @return The index of this node
          */
-        const bool visited() const {
-            return m_visited;
+        const size_t getIndex() const {
+            return m_index;
         }
 
     private:
         std::string                m_id{""};
         std::vector<NodeWRef>      m_connections;
         bool                       m_visited{false};
+        size_t                     m_index{0};
 
 };
