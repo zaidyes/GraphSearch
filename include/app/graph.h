@@ -61,7 +61,8 @@ class Graph {
 		 */
         NodeRef addNode(const std::string& id) {
             auto newNode = Node::createInstance(id);
-            m_nodeMap.push_back(newNode);
+            newNode->setIndex(m_nodes.size());
+            m_nodes.push_back(newNode);
             return newNode;
         }
 
@@ -93,7 +94,7 @@ class Graph {
 		 *
 		 */
 		size_t size() const {
-            return m_nodeMap.size();
+            return m_nodes.size();
         }
 
 		/**
@@ -102,7 +103,7 @@ class Graph {
 		 *
 		 */
 		void clear() {
-            m_nodeMap.clear();
+            m_nodes.clear();
 		}
 
 		/**
@@ -113,7 +114,7 @@ class Graph {
 		 *
 		 */
 		bool empty() const {
-            return m_nodeMap.empty();
+            return m_nodes.empty();
 		}
 
 		/**
@@ -126,11 +127,11 @@ class Graph {
 		 *
 		 */
 		NodeRef getNode(size_t index) const {
-            if (index >= m_nodeMap.size()) {
+            if (index >= m_nodes.size()) {
                 Log::warn("Index out of bounds for node.");
                 return nullptr;
             } else {
-                return m_nodeMap[index];
+                return m_nodes[index];
             }
 		}
 
@@ -143,15 +144,15 @@ class Graph {
 		 *
 		 */
 		NodeRef getFirst() const {
-            if (m_nodeMap.empty()) {
+            if (m_nodes.empty()) {
                 Log::error("Graph is empty");
                 return nullptr;
             } else {
-                return m_nodeMap[0];
+                return m_nodes[0];
             }
 		}
 
 private:
-        std::vector<NodeRef> m_nodeMap;
+        std::vector<NodeRef> m_nodes;
 
 };

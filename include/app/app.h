@@ -305,37 +305,6 @@ IMPLEMENT_TEST(minimalisticTest) {
 
 }
 
-IMPLEMENT_TEST(VisitedUnsetTest) {
-
-    // create BFS object
-    auto bfs = std::make_unique<BreadthFirstSearch>();
-    testAssert(nullptr != bfs);
-
-    // create graph
-    auto graph = Graph::createInstance();
-    testAssert(nullptr != graph);
-
-    // add nodes
-    auto a = graph->addNode("A");
-    auto b = graph->addNode("B");
-    auto c = graph->addNode("C");
-
-    testAssertFalse(a->visited());
-    testAssertFalse(b->visited());
-    testAssertFalse(c->visited());
-
-    graph->addEdge(a, b);
-    graph->addEdge(b, c);
-    graph->addEdge(c, a);
-
-    // check if node is not found
-    bfs->find(graph, "DOES_NOT_EXIST");
-
-    testAssertFalse(a->visited());
-    testAssertFalse(b->visited());
-    testAssertFalse(c->visited());
-}
-
 IMPLEMENT_TEST(cyclicSearchTest) {
 
     // create BFS object

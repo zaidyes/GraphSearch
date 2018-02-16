@@ -46,17 +46,14 @@ class BreadthFirstSearch {
             }
 
             std::queue<NodeRef> toProcess;
-            std::vector<NodeRef> visitedNodes;
-            visitedNodes.reserve(graph->size());
+            std::vector<bool> visitedNodes(graph->size(), false);
 
             // Get root node and push it to our process queue
             auto rootNode = graph->getFirst();
-            toProcess.push(rootNode);
 
             // mark the node visited we donot want to queue it again
-            // remember the node to un-mark it in the end
-            rootNode->markVisited();
-            visitedNodes.push_back(std::move(rootNode));
+            visitedNodes[rootNode->getIndex()] = 1;
+            toProcess.push(std::move(rootNode));
 
             while(!toProcess.empty()) {
                 auto node = toProcess.front();
@@ -73,19 +70,13 @@ class BreadthFirstSearch {
                 for(auto weakNode : connections) {
                     if (auto lockedNode = weakNode.lock()) {
                         // skip the node if its already visited else queue it up
-                        if (!lockedNode->visited()) {
-                            lockedNode->markVisited();
-                            toProcess.push(lockedNode);
-                            visitedNodes.push_back(std::move(lockedNode));
+                        if (visitedNodes[lockedNode->getIndex()]) {
+                            visitedNodes[lockedNode->getIndex()] = true;
+                            toProcess.push(std::move(lockedNode));
                         }
                     }
                 }
             }          
-
-            // set all nodes we visited previously to unvisited
-            for (auto node : visitedNodes) {
-                node->markVisited(false);
-            }
 
             return result;
         }
