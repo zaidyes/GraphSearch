@@ -41,8 +41,9 @@ class Node {
 		 * Constructor
 		 *
 		 */
-        Node(const std::string& id) {
+        Node(const std::string& id, const size_t &index) {
             m_id = id;
+			m_index = index;
         }
 
     public:
@@ -54,8 +55,8 @@ class Node {
 		 * @return Returns a reference to the created node instance
 		 *
 		 */
-        static NodeRef createInstance(const std::string& id) {
-            return std::make_shared<Node>(id);
+        static NodeRef createInstance(const std::string& id, const size_t &index) {
+            return std::make_shared<Node>(id, index);
         }
 
     public:
@@ -106,17 +107,11 @@ class Node {
             return node->getId() == m_id;
 		}
 
-        const bool visited() {
-            return m_visited.load();
-        }
-
-        void markVisited(const bool visited = true) {
-            m_visited.store(visited);
-        }
+		size_t index() const { return m_index; }
 
     private:
         std::string                m_id{""};
         std::vector<NodeWRef>      m_connections;
-        std::atomic_bool           m_visited{false};
+		size_t					   m_index{0};
 
 };

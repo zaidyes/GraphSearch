@@ -54,138 +54,70 @@ private:
 
 typedef SafeQueue<NodeRef> NodeQueue;
 
-class ThreadedBFS {
 
+class VisitVector {
 public:
 
-    static NodeRef findT(NodeQueue &toProcess, const std::string& id, NodeQueue &visitedNodes, const size_t size, std::atomic_int &checked, std::atomic_bool &stop)
-    {
-        while (!stop) {
-            auto node = toProcess.deque();
-            if (!node) continue;
+	VisitVector(const size_t size)
+		: m_vector(std::vector<std::atomic_bool>(size))
+	{
+		
+	}
 
-            checked++;
-            if (node->getId() == id) {
-                stop.store(true);
-                return node;
-            }
+	void set(const size_t index, const bool &val) {
+		m_vector[index].store(val);
+	}
 
-            if (checked >= size) {
-                stop.store(true);
-                return nullptr;
-            }
+	const bool read(const size_t index) const {
+		return m_vector[index].load();
+	}
 
-            auto connections = node->getConnections();
-            for (auto itr = connections.begin(); itr != connections.end(); ++itr) {
-                if (auto lockedNode = (*itr).lock()) {
-                    // skip the node if its already visited else queue it up
-                    if (!lockedNode->visited()) {
-                        lockedNode->markVisited();
-                        visitedNodes.queue(lockedNode);
-                        toProcess.queue(lockedNode);
-                    }
-                }
-            }
-        }
+	const bool empty() const {
+		return m_vector.empty();
+	}
 
-        return nullptr;
-    }
-
-public:
-
-    void setSearchId(const std::string &id) {
-        m_searchId = id;
-    }
-
-    void setRootNode(const NodeRef &rootNode) {
-        m_rootNode = rootNode;
-    }
-
-    void setTotalNodeCount(const size_t totalNodes) {
-        m_totalNodes = totalNodes;
-    }
-
-    void setMaxThreadCount(const int maxThreads) {
-        m_maxThreadCount = maxThreads;
-    }
-
-    void stop() {
-        m_stop = true;
-    }
-
-    bool startMTSearch() {
-        if (!m_rootNode)
-            return false;
-
-        m_rootNode->markVisited();
-        m_visitedNodes.queue(m_rootNode);
-        m_processQueue.queue(m_rootNode);
-        m_stop = false;
-
-        // start atleast one thread to perform search
-        m_futures.emplace_back(std::async(findT, std::ref(m_processQueue), std::ref(m_searchId), std::ref(m_visitedNodes), m_totalNodes, std::ref(m_checked),  std::ref(m_stop)));
-
-        // start more if required and when it is possible
-        while (m_futures.size() < m_maxThreadCount) {
-            //std::cout << "Starting new thread" << std::endl;
-            m_futures.emplace_back(std::async(findT, std::ref(m_processQueue), std::ref(m_searchId), std::ref(m_visitedNodes), m_totalNodes, std::ref(m_checked), std::ref(m_stop)));
-        }
-
-        return true;
-    }
-
-    bool startSTSearch() {
-        if (!m_rootNode)
-            return false;
-
-        m_rootNode->markVisited();
-        m_visitedNodes.queue(m_rootNode);
-        m_processQueue.queue(m_rootNode);
-        m_stop = false;
-
-        m_result = ThreadedBFS::findT(m_processQueue, m_searchId, m_visitedNodes, m_totalNodes, m_checked, m_stop);
-        return true;
-    }
-
-
-    bool waitForResult() {
-        for (auto itr = m_futures.begin(); itr != m_futures.end(); ++itr) {
-            auto res = (*itr).get();
-            if (res) {
-                m_result = res;
-                return true;
-            }
-        }
-
-        m_result = nullptr;
-        return false;
-    }
-
-    NodeRef getResult() const {
-        return m_result;
-    }
-
-    void unmarkVisited() {
-        while (!m_visitedNodes.empty()) {
-            auto node = m_visitedNodes.deque();
-            if (node)
-                node->markVisited(false);
-        }
-    }
+	const size_t size() const {
+		return m_vector.size();
+	}
 
 private:
-    NodeRef m_rootNode;
-    NodeRef m_result;
-    NodeQueue m_processQueue;
-    NodeQueue m_visitedNodes;
-    NodeRef m_searchResult;
-    std::string m_searchId;
-    int m_maxThreadCount;
-    std::vector<std::future<NodeRef>> m_futures;
-    std::atomic_bool m_stop{false};
-    size_t m_totalNodes{0};
-    std::atomic_int m_checked{0};
+	std::mutex						m_mutex;
+	std::vector<std::atomic_bool>   m_vector;
 };
+
+NodeRef findT(NodeQueue &toProcess, const std::string& id, VisitVector &visitedNodes, const size_t size, std::atomic_int &checked, std::atomic_bool &stop)
+{
+	while (!stop) {
+		auto node = toProcess.deque();
+		if (!node) continue;
+
+		checked++;
+		if (node->getId() == id) {
+			stop.store(true);
+			return node;
+		}
+
+		if (checked >= size) {
+			stop.store(true);
+			return nullptr;
+		}
+
+		auto connections = node->getConnections();
+		for (auto itr = connections.begin(); itr != connections.end(); ++itr) {
+			if (auto lockedNode = (*itr).lock()) {
+				// skip the node if its already visited else queue it up
+				if (!visitedNodes.read(lockedNode->index())) {
+					visitedNodes.set(lockedNode->index(), true);
+					toProcess.queue(lockedNode);
+				}
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+
 
 /**
  * 
@@ -194,8 +126,7 @@ private:
  */
 class BreadthFirstSearch {
     
-    public:      
-
+    public:
         /**
          * 
          * Find a named node.
@@ -218,17 +149,31 @@ class BreadthFirstSearch {
             auto rootNode = graph->getFirst();
             if (rootNode->getId() == id) return rootNode;
 
-            ThreadedBFS searcher;
-            searcher.setSearchId(id);
-            searcher.setMaxThreadCount(20);
-            searcher.setRootNode(rootNode);
-            searcher.setTotalNodeCount(graph->size());
+			NodeQueue processQueue;
+			//NodeQueue visitedNodes;
+			VisitVector visitedNodes(graph->size());
+			
+			std::atomic_int checked{0};
+			std::atomic_bool stop{false};
 
-            searcher.startMTSearch();
-            searcher.waitForResult();
-            searcher.unmarkVisited();
+			visitedNodes.set(0, true);
+			processQueue.queue(rootNode);
 
-            return searcher.getResult();;
+			std::vector<std::future<NodeRef>> futures;
+
+			for (size_t i = 0; i < 3; ++i)
+				futures.emplace_back(std::async(findT, std::ref(processQueue), std::ref(id), std::ref(visitedNodes), graph->size(), std::ref(checked), std::ref(stop)));
+
+			NodeRef result = nullptr;
+			for (auto itr = futures.begin(); itr != futures.end(); ++itr) {
+				auto res = (*itr).get();
+				if (res) {
+					result = res;
+					break;
+				}
+			}	
+
+			return result;
         }
 
 };

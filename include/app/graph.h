@@ -61,7 +61,7 @@ class Graph {
 		 *
 		 */
         NodeRef addNode(const std::string& id) {
-            auto newNode = Node::createInstance(id);
+            auto newNode = Node::createInstance(id, m_nodeMap.size());
             m_nodeMap.push_back(newNode);
             return newNode;
 
